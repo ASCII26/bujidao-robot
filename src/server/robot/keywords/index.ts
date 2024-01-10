@@ -8,6 +8,7 @@ export interface IWordsContext {
   user: Contact;
   logger: winston.Logger;
   room?: Room;
+  needDelay?: boolean;
 }
 
 interface IWordsContextWithRoom extends IWordsContext {
@@ -53,8 +54,12 @@ const fullMatchHandle = (ctx: IWordsContext) => {
 const inviteToRoom = async ({
   room,
   user,
-  logger
+  logger,
+  needDelay,
 }: IWordsContextWithRoom) => {
+  if (needDelay) {
+    await new Promise(r => setTimeout(r, 1000))
+  }
   const userName = user.name();
   if (await room.has(user)) {
     await user.say('你已经在群了')
