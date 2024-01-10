@@ -1,10 +1,8 @@
-import Koa from 'koa';
 import 'dotenv/config.js';
 import { format, createLogger, transports} from 'winston';
-import router from './router';
-const { combine, timestamp } = format;
+import Robot from './server/robot';
 
-const app = new Koa();
+const { combine, timestamp } = format;
 const logger = createLogger({
   level: 'info',
   format: combine(
@@ -18,13 +16,8 @@ const logger = createLogger({
     new transports.Console(),
   ],
 });
-app.use(async (ctx, next) => {
-  if (!ctx.logger) {
-    ctx.logger = logger;
-  }
-  await next();
-});
 
-app.use(router.routes());
+if (process.env.WECHATY_TOKEN) {
+  new Robot(process.env.WECHATY_TOKEN, logger);
+}
 
-app.listen(process.env.PORT);
