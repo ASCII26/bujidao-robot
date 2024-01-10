@@ -10,8 +10,9 @@ import { Friendship as FriendshipType } from '@juzi/wechaty-puppet/types'
 import type { WechatyInterface } from '@juzi/wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal'
 import winston from 'winston';
-import { weather } from '@/server/api/weather';
-import { getPrettyMsgOfWeather } from '../utils/function';
+// import { weather } from '@/server/api/weather';
+// import { getPrettyMsgOfWeather } from '../utils/function';
+import { keyWordsHandle } from './keywords';
 
 const BUJIDAO_NAME = '沐洒布吉岛Robot测试群';
 const ADMINS = ['7881299792907647'];
@@ -49,14 +50,17 @@ class Robot {
   private async onFriendship(friendship: Friendship) {
     if (friendship.type() === FriendshipType.Receive) {
       await friendship.accept();
-      if (/群/.test(friendship.hello()) && this.bujidaoRoom) {
-        // if want to send msg , you need to delay sometimes
-        await new Promise(r => setTimeout(r, 1000))
-        
-        const user = friendship.contact();
-        this.inviteToRoom(this.bujidaoRoom, user);
-      }
       this.logger.info(`Friendship accept success.`);
+      const helloMsg = friendship.hello();
+      if (helloMsg) {
+        keyWordsHandle({
+          text: helloMsg,
+          room: this.bujidaoRoom,
+          user: friendship.contact(),
+          logger: this.logger,
+          needDelay: true,
+        })
+      }
     }
   }
 
@@ -176,45 +180,45 @@ class Robot {
       userName,
     });
 
-    // 进群邀请
-    if (/群/.test(text) && this.bujidaoRoom) {
-      this.inviteToRoom(this.bujidaoRoom, talker);
-      return;
-    }
-
+    keyWordsHandle({
+      text,
+      room: this.bujidaoRoom,
+      user: talker,
+      logger: this.logger,
+    });
     
-    if (/天气/.test(text)) {
-      const splitWords = text.split(' ');
-      const city = splitWords[1];
-      if (!city) {
-        await talker.say(`你想问哪里的天气呢？
-回复“天气 某地”，查询实时天气状况
-回复“天气预报 某地”，查询本周天气预报
-关键词和地点之间用【空格】隔开`);
-        return;
-      }
-      const isForcast = /预报/.test(text);
-      const extension = isForcast ? 'all' : 'base';
-      const resp = await weather.get(city, extension);
-      if (resp.data) {
-        await talker.say(getPrettyMsgOfWeather(resp.data, isForcast));
-      } else {
-        await talker.say(resp.message);
-      }
-    }
+//     if (/天气/.test(text)) {
+//       const splitWords = text.split(' ');
+//       const city = splitWords[1];
+//       if (!city) {
+//         await talker.say(`你想问哪里的天气呢？
+// 回复“天气 某地”，查询实时天气状况
+// 回复“天气预报 某地”，查询本周天气预报
+// 关键词和地点之间用【空格】隔开`);
+//         return;
+//       }
+//       const isForcast = /预报/.test(text);
+//       const extension = isForcast ? 'all' : 'base';
+//       const resp = await weather.get(city, extension);
+//       if (resp.data) {
+//         await talker.say(getPrettyMsgOfWeather(resp.data, isForcast));
+//       } else {
+//         await talker.say(resp.message);
+//       }
+//     }
   }
 
-  private async inviteToRoom(room: Room, user: Contact) {
-    const userName = user.name();
-    if (await room.has(user)) {
-      await user.say('你已经在群了')
-    } else {
-      await user.say('稍等，我拉你进去');
-      room.add(user)
-        .then(() => this.logger.info({ label: '邀请入群成功', userName }))
-        .catch((error) => this.logger.error({ label: '邀请入群失败', error, userName }))
-    }
-  }
+  // private async inviteToRoom(room: Room, user: Contact) {
+  //   const userName = user.name();
+  //   if (await room.has(user)) {
+  //     await user.say('你已经在群了')
+  //   } else {
+  //     await user.say('稍等，我拉你进去');
+  //     room.add(user)
+  //       .then(() => this.logger.info({ label: '邀请入群成功', userName }))
+  //       .catch((error) => this.logger.error({ label: '邀请入群失败', error, userName }))
+  //   }
+  // }
 }
 
 export default Robot;
