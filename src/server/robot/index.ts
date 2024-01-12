@@ -13,6 +13,7 @@ import winston from 'winston';
 // import { weather } from '@/server/api/weather';
 // import { getPrettyMsgOfWeather } from '../utils/function';
 import { keyWordsHandle } from './keywords';
+import { HELLO, ROOM_IN_MESSAGE } from '../utils/template-msg';
 
 const BUJIDAO_NAME = '沐洒布吉岛Robot测试群';
 const ADMINS = ['7881299792907647'];
@@ -24,11 +25,17 @@ class Robot {
     this.bot = WechatyBuilder.build({
       name: 'bujidao-bot',
       puppet: '@juzi/wechaty-puppet-service',
+      // puppet: 'wechaty-puppet-wechat4u',
       puppetOptions: {
         token,
       }
     });
     this.listen();
+  }
+
+  private async logout() {
+    await this.bot.logout()
+    this.logger.info('Bot logout')
   }
 
   private async listen() {
@@ -50,29 +57,43 @@ class Robot {
   private async onFriendship(friendship: Friendship) {
     if (friendship.type() === FriendshipType.Receive) {
       await friendship.accept();
-      this.logger.info(`Friendship accept success.`);
+      await new Promise(r => setTimeout(r, 1000))
       const helloMsg = friendship.hello();
+      const user = friendship.contact();
       if (helloMsg) {
         keyWordsHandle({
           text: helloMsg,
           room: this.bujidaoRoom,
-          user: friendship.contact(),
+          user,
           logger: this.logger,
-          needDelay: true,
         })
+      } else {
+        await new Promise(r => setTimeout(r, 1000))
+        user.say(HELLO);
       }
     }
   }
 
   private async onRoomIn(room: Room, inviteeList: Contact[], inviter: Contact) {
+    const topic = await room.topic();
+    const helloMsg = ROOM_IN_MESSAGE[topic];
     const nameList = inviteeList.map(c => c.name()).join(',');
-    const members = await room.memberAll();
-    room.say(`欢迎 ${nameList}！！！\n欢迎成为沐洒布吉岛第${members.length}位岛民！\n可以先看下公告，了解下群规哈～`);
     this.logger.info({
       room: room.topic(),
       invitee: nameList,
       inviter: inviter.name(),
     })
+    
+    if (!helloMsg) {
+      return;
+    }
+    const members = await room.memberAll();
+
+    if (typeof helloMsg === 'function') {
+      room.say(helloMsg({ nameList, members }));
+    } else {
+      room.say(helloMsg);
+    }
   }
 
   private onScan(qrcode: string, status: ScanStatus) {
@@ -155,7 +176,12 @@ class Robot {
       return;
     }
 
-    await msg.say(`请问有什么事吗？你刚刚对我说：(${text})`);
+    keyWordsHandle({
+      text,
+      room: this.bujidaoRoom,
+      user: talker,
+      logger: this.logger,
+    });
   }
 
   private async kickHandler(msg: Message, room: Room) {
