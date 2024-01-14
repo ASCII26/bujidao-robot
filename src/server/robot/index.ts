@@ -10,13 +10,9 @@ import { Friendship as FriendshipType } from '@juzi/wechaty-puppet/types'
 import type { WechatyInterface } from '@juzi/wechaty/impls';
 import qrcodeTerminal from 'qrcode-terminal'
 import winston from 'winston';
-// import { weather } from '@/server/api/weather';
-// import { getPrettyMsgOfWeather } from '../utils/function';
 import { keyWordsHandle } from './keywords';
 import { HELLO, ROOM_IN_MESSAGE } from '../utils/template-msg';
-
-const BUJIDAO_NAME = '沐洒布吉岛Robot测试群';
-const ADMINS = ['7881299792907647'];
+import { BUJIDAO_NAME } from '../utils/constant';
 
 class Robot {
   private bot: WechatyInterface;
@@ -132,7 +128,7 @@ class Robot {
       return;
     }
 
-    this.privateMessageHandler(text, talker)
+    this.privateMessageHandler(msg, text, talker)
   }
 
   // 群聊消息处理
@@ -148,7 +144,6 @@ class Robot {
       return;
     }
     const topic = await room.topic();
-    const owner = room.owner();
 
     this.logger.info({
       label: '收到群聊消息',
@@ -157,48 +152,18 @@ class Robot {
       topic,
     });
 
-    console.log('=====owner, currentUser, talker', owner?.id, this.bot.currentUser.id, talker.id);
-
-    // 踢人关键字
-    if (/踢人/.test(text)) {
-      // 非群主
-      if (!ADMINS.includes(talker.id)) {
-        await msg.say('管理员才有权限执行这个操作')
-      } else {
-        await this.kickHandler(msg, room);
-      }
-      return;
-    }
-
-    // 打印群公告
-    if (/公告/.test(text)) {
-      await msg.say(await room.announce());
-      return;
-    }
-
     keyWordsHandle({
+      msg,
       text,
       room: this.bujidaoRoom,
       user: talker,
       logger: this.logger,
+      botId: this.bot.currentUser.id,
     });
   }
 
-  private async kickHandler(msg: Message, room: Room) {
-    // 执行踢人操作
-    const mentionList = await msg.mentionList();
-    const kickList = mentionList.filter(c => ![...ADMINS, this.bot.currentUser.id].includes(c.id));
-
-    if (kickList.length === 0) {
-      await msg.say('你要踢谁？请先@我，再使用 “踢人 @+群成员” 的格式告诉我');
-      return;
-    }
-    await room.remove(kickList)
-    await msg.say(`已将${kickList.map(c => c.name()).join('，')}踢出`);
-  }
-
   // 个人消息处理
-  private async privateMessageHandler(text: string, talker: Contact) {
+  private async privateMessageHandler(msg: Message, text: string, talker: Contact) {
     const userName = talker.name();
     this.logger.info({
       label: '收到个人消息',
@@ -207,44 +172,13 @@ class Robot {
     });
 
     keyWordsHandle({
+      msg,
       text,
       room: this.bujidaoRoom,
       user: talker,
       logger: this.logger,
     });
-    
-//     if (/天气/.test(text)) {
-//       const splitWords = text.split(' ');
-//       const city = splitWords[1];
-//       if (!city) {
-//         await talker.say(`你想问哪里的天气呢？
-// 回复“天气 某地”，查询实时天气状况
-// 回复“天气预报 某地”，查询本周天气预报
-// 关键词和地点之间用【空格】隔开`);
-//         return;
-//       }
-//       const isForcast = /预报/.test(text);
-//       const extension = isForcast ? 'all' : 'base';
-//       const resp = await weather.get(city, extension);
-//       if (resp.data) {
-//         await talker.say(getPrettyMsgOfWeather(resp.data, isForcast));
-//       } else {
-//         await talker.say(resp.message);
-//       }
-//     }
   }
-
-  // private async inviteToRoom(room: Room, user: Contact) {
-  //   const userName = user.name();
-  //   if (await room.has(user)) {
-  //     await user.say('你已经在群了')
-  //   } else {
-  //     await user.say('稍等，我拉你进去');
-  //     room.add(user)
-  //       .then(() => this.logger.info({ label: '邀请入群成功', userName }))
-  //       .catch((error) => this.logger.error({ label: '邀请入群失败', error, userName }))
-  //   }
-  // }
 }
 
 export default Robot;

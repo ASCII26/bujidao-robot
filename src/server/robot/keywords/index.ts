@@ -1,12 +1,15 @@
-import { Contact, Room } from "@juzi/wechaty";
+import { Contact, Message, Room } from "@juzi/wechaty";
 import { commands, commandsMapping, commandsType } from "./commands";
 import winston from "winston";
 import { weatherWordsHandle } from "./weather";
+import { roomWordsHandle } from "./room";
 
 export interface IWordsContext {
+  msg?: Message,
   text: string;
   user: Contact;
   logger: winston.Logger;
+  botId?: string;
   room?: Room;
 }
 
@@ -35,6 +38,9 @@ const commandMatchHandle = (words: string[], ctx: IWordsContext) => {
       });
       break;
     case commandsType.exchangeRate:
+      break;
+    case commandsType.room:
+      roomWordsHandle(ctx);
       break;
     default:
       break;
