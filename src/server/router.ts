@@ -1,5 +1,5 @@
 import Router from 'koa-router';
-import Weather from './api/weather';
+import Weather from './api/weather-koa';
 const router = new Router();
 
 if (process.env.AMAP_KEY) {
