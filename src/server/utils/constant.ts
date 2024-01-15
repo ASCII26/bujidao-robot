@@ -5,12 +5,13 @@ export enum ROOM_NAMES {
   BUJIDAO,
   ROBOT,
 }
-export const roomKeywordsMap = {
+export const roomKeywordsMap: Record<string, string[]> = {
   [ROOM_NAMES.BUJIDAO]: ['布吉岛', '技术群'],
   [ROOM_NAMES.ROBOT]: ['小岛管家', '机器人'],
 };
 
-export const roomNamesMap = {
+export const roomNamesMap: Record<string, string> = {
+  [ROOM_NAMES.BUJIDAO]: '',
   [ROOM_NAMES.ROBOT]: '小岛管家项目交流群',
 }
 

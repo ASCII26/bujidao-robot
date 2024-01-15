@@ -31,7 +31,7 @@ export function keyWordsHandle(ctx: IWordsContextWithRoom): void;
 export function keyWordsHandle (ctx: IWordsContext) {
   const text = getText(ctx);
   const words = text.split(' ');
-  if (words.length > 1 && commands.includes(words[0])) {
+  if (words.length > 0 && commands.includes(words[0])) {
     commandMatchHandle(words, text, ctx);
   } else {
     fullMatchHandle(ctx, text);

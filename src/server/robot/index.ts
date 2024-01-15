@@ -95,8 +95,7 @@ class Robot {
         encodeURIComponent(qrcode),
       ].join('')
       this.logger.info(`onScan: ${ScanStatus[status]}(${status}) - ${qrcodeImageUrl}`)
-      qrcodeTerminal.generate(qrcode, { small: true })  // show qrcode on console
-  
+      qrcodeTerminal.generate(qrcode, { small: true })
     } else {
       this.logger.info(`onScan: ${ScanStatus[status]}(${status})`)
     }

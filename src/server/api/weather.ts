@@ -1,4 +1,5 @@
 import { ILiveWeatherResp, IForecastResp, IGeoCodesResp } from "@/model/weather";
+import fetch from 'node-fetch';
 
 const getWeatherByExtension = (info: ILiveWeatherResp | IForecastResp, extension: TWeatherExtension) => {
   if (extension === "base") {
@@ -46,7 +47,7 @@ class Weather {
     const resp = await fetch(`${URLs.weather}?${params}`, {
       method: 'GET',
     });
-    const data = await resp.json();
+    const data = await resp.json() as ILiveWeatherResp | IForecastResp;
     return {
       data: getWeatherByExtension(data, extension),
       message: 'success',

@@ -4,8 +4,7 @@
     "module": "CommonJS",
     "lib": ["es2017", "dom"],
     "outDir": "dist",
-    // "rootDir": ".",
-    // "jsx": "react",
+    "rootDir": ".",
     "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": true,
@@ -24,8 +23,9 @@
       "@/*": ["src/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    ".eslintrc.js"
+  "include": [
+    "src/model",
+    "src/server",
+    "src/robot-app.ts",
   ]
 }

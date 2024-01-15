@@ -2,6 +2,10 @@ import { IWordsContextOnFriendship, IWordsContextOnPrivate, IWordsContextWithRoo
 import { ADMINS, roomKeywordsMap, roomNamesMap } from "@/server/utils/constant";
 
 export const roomWordsHandle = async (ctx: IWordsContextWithRoom, text: string) => {
+  if (ctx.isPrivate) {
+    await ctx.user.say('这是私聊窗口，不支持群指令');
+    return;
+  }
   // 踢人关键字
   if (/踢人/.test(text)) {
     // 非群主
@@ -46,7 +50,7 @@ export const inviteToRoom = async ({
   }
 
   const userName = user.name();
-  const roomKeyword = Object.keys(roomKeywordsMap).find(k => roomKeywordsMap[k].includes(command));
+  const roomKeyword = Object.keys(roomKeywordsMap).find((k) => roomKeywordsMap[k].includes(command));
   const roomName: string | undefined = roomKeyword ? roomNamesMap[roomKeyword] : undefined;
   const room = roomName
     ? await bot.Room.find(roomName)
