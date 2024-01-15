@@ -2,31 +2,55 @@ import { Contact, Message, Room } from "@juzi/wechaty";
 import { commands, commandsMapping, commandsType } from "./commands";
 import winston from "winston";
 import { weatherWordsHandle } from "./weather";
-import { roomWordsHandle } from "./room";
+import { inviteToRoom, roomWordsHandle } from "./room";
+import { WechatyInterface } from "@juzi/wechaty/impls";
 
-export interface IWordsContext {
-  msg?: Message,
-  text: string;
+export interface IWordsContextBase {
   user: Contact;
   logger: winston.Logger;
-  botId?: string;
-  room?: Room;
+  bot: WechatyInterface;
+  isPrivate: boolean;
 }
 
-interface IWordsContextWithRoom extends IWordsContext {
+export interface IWordsContextOnPrivate extends IWordsContextBase {
+  msg: Message,
+}
+export interface IWordsContextWithRoom extends IWordsContextBase {
+  msg: Message,
   room: Room;
 }
-export const keyWordsHandle = (ctx: IWordsContext) => {
-  const words = ctx.text.split(' ');
+export interface IWordsContextOnFriendship extends IWordsContextBase {
+  text: string;
+}
+
+export type IWordsContext = IWordsContextOnPrivate | IWordsContextOnFriendship | IWordsContextWithRoom;
+
+export function keyWordsHandle(ctx: IWordsContextOnPrivate): void;
+export function keyWordsHandle(ctx: IWordsContextOnFriendship): void;
+export function keyWordsHandle(ctx: IWordsContextWithRoom): void;
+export function keyWordsHandle (ctx: IWordsContext) {
+  const text = getText(ctx);
+  const words = text.split(' ');
   if (words.length > 1 && commands.includes(words[0])) {
-    commandMatchHandle(words, ctx);
+    commandMatchHandle(words, text, ctx);
   } else {
-    fullMatchHandle(ctx);
+    fullMatchHandle(ctx, text);
   }
 }
 
+export const getText = (ctx: IWordsContext): string => {
+  if ('text' in ctx) {
+    return ctx.text
+  }
+  if ('msg' in ctx) {
+    return ctx.msg.text()
+  }
+  return '';
+}
+
+
 // 指令匹配逻辑
-const commandMatchHandle = (words: string[], ctx: IWordsContext) => {
+const commandMatchHandle = (words: string[], text: string, ctx: IWordsContext) => {
   const [command, extra] = words;
   const type = Object.keys(commandsMapping).find(key => commandsMapping[key].includes(command));
   switch (type) {
@@ -40,7 +64,11 @@ const commandMatchHandle = (words: string[], ctx: IWordsContext) => {
     case commandsType.exchangeRate:
       break;
     case commandsType.room:
-      roomWordsHandle(ctx);
+      // 群聊消息处理
+      roomWordsHandle(ctx as IWordsContextWithRoom, text);
+      break;
+    case commandsType.invite:
+      inviteToRoom({ ...ctx, command });
       break;
     default:
       break;
@@ -48,28 +76,9 @@ const commandMatchHandle = (words: string[], ctx: IWordsContext) => {
 }
 
 // 全匹配逻辑
-const fullMatchHandle = (ctx: IWordsContext) => {
-  // 进群邀请
-  if (/群/.test(ctx.text) && ctx.room) {
-    inviteToRoom(ctx as IWordsContextWithRoom);
-    return;
-  }
-
-  ctx.user.say(`请问有什么事吗？你刚刚对我说：(${ctx.text})`);
-}
-
-const inviteToRoom = async ({
-  room,
-  user,
-  logger,
-}: IWordsContextWithRoom) => {
-  const userName = user.name();
-  if (await room.has(user)) {
-    await user.say('你已经在群了')
-  } else {
-    await user.say('稍等，我拉你进去');
-    room.add(user)
-      .then(() => logger.info({ label: '邀请入群成功', userName }))
-      .catch((error) => logger.error({ label: '邀请入群失败', error, userName }))
-  }
+const fullMatchHandle = (ctx: IWordsContext, text: string) => {
+  /**
+   * TODO: 匹配不到命令关键词的逻辑
+   */
+  ctx.user.say(`请问有什么事吗？你刚刚对我说：(${text})`);
 }

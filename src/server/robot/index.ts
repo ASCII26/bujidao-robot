@@ -12,11 +12,9 @@ import qrcodeTerminal from 'qrcode-terminal'
 import winston from 'winston';
 import { keyWordsHandle } from './keywords';
 import { HELLO, ROOM_IN_MESSAGE } from '../utils/template-msg';
-import { BUJIDAO_NAME } from '../utils/constant';
 
 class Robot {
   private bot: WechatyInterface;
-  private bujidaoRoom?: Room;
   constructor(token: string, private logger: winston.Logger) {
     this.bot = WechatyBuilder.build({
       name: 'bujidao-bot',
@@ -43,28 +41,26 @@ class Robot {
     this.bot.on('friendship', this.onFriendship.bind(this));
 
     this.bot.start()
-      .then(async () => {
-        this.logger.info('Bot start success.')
-        this.bujidaoRoom = await this.bot.Room.find({ topic: BUJIDAO_NAME });
-      })
+      .then(() => this.logger.info('Bot start success.'))
       .catch((e: unknown) => this.logger.error(e))
   }
 
   private async onFriendship(friendship: Friendship) {
     if (friendship.type() === FriendshipType.Receive) {
       await friendship.accept();
+      // 需要等待一会儿，等待系统处理好友请求
       await new Promise(r => setTimeout(r, 1000))
       const helloMsg = friendship.hello();
       const user = friendship.contact();
       if (helloMsg) {
         keyWordsHandle({
           text: helloMsg,
-          room: this.bujidaoRoom,
           user,
           logger: this.logger,
+          bot: this.bot,
+          isPrivate: true,
         })
       } else {
-        await new Promise(r => setTimeout(r, 1000))
         user.say(HELLO);
       }
     }
@@ -83,9 +79,9 @@ class Robot {
     if (!helloMsg) {
       return;
     }
-    const members = await room.memberAll();
-
+    
     if (typeof helloMsg === 'function') {
+      const members = await room.memberAll();
       room.say(helloMsg({ nameList, members }));
     } else {
       room.say(helloMsg);
@@ -122,61 +118,26 @@ class Robot {
     const text = msg.text();
     const talker = msg.talker();
     const room = msg.room();
-
-    if (room) {
-      this.roomMessageHandler({ msg, room, text, talker })
-      return;
-    }
-
-    this.privateMessageHandler(msg, text, talker)
-  }
-
-  // 群聊消息处理
-  private async roomMessageHandler({
-    msg, room, text, talker
-  }: {
-    msg: Message,
-    room: Room,
-    text: string,
-    talker: Contact,
-  }) {
-    if (!msg.mentionSelf()) {
-      return;
-    }
-    const topic = await room.topic();
-
-    this.logger.info({
-      label: '收到群聊消息',
-      message: text,
-      userName: talker.name(),
-      topic,
-    });
-
-    keyWordsHandle({
-      msg,
-      text,
-      room: this.bujidaoRoom,
-      user: talker,
-      logger: this.logger,
-      botId: this.bot.currentUser.id,
-    });
-  }
-
-  // 个人消息处理
-  private async privateMessageHandler(msg: Message, text: string, talker: Contact) {
     const userName = talker.name();
-    this.logger.info({
-      label: '收到个人消息',
-      message: text,
-      userName,
-    });
+
+    // 群聊消息处理
+    if (room) {
+      if (!msg.mentionSelf()) {
+        return;
+      }
+      const topic = await room.topic();
+      this.logger.info({ label: '收到群聊消息', message: text, userName, topic });
+    } else {
+      this.logger.info({ label: '收到个人消息', message: text, userName });
+    }
 
     keyWordsHandle({
+      ...(room ? { room } : {}),
       msg,
-      text,
-      room: this.bujidaoRoom,
       user: talker,
       logger: this.logger,
+      bot: this.bot,
+      isPrivate: !room,
     });
   }
 }
