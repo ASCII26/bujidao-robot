@@ -80,5 +80,6 @@ const fullMatchHandle = (ctx: IWordsContext, text: string) => {
   /**
    * TODO: 匹配不到命令关键词的逻辑
    */
-  ctx.user.say(`请问有什么事吗？你刚刚对我说：(${text})`);
+  const say = 'msg' in ctx ? ctx.msg.say : ctx.user.say;
+  say(`请问有什么事吗？你刚刚对我说：(${text})`);
 }
