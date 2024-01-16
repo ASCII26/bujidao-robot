@@ -1,6 +1,6 @@
 FROM node:18 AS BUILD_IMAGE
 
-RUN corepack enable && corepack prepare pnpm@8 --activate
+RUN npm i -g pnpm@8
 
 WORKDIR /app
 
