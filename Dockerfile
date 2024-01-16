@@ -1,14 +1,22 @@
-# 指定基础镜像版本，确保每次构建都是幂等的
-FROM node:16
+FROM node:18 AS BUILD_IMAGE
 
-RUN corepack enable && corepack prepare pnpm@7.6.0 --activate
+RUN corepack enable && corepack prepare pnpm@8 --activate
 
 WORKDIR /app
 
-COPY .npmrc pnpm-lock.yaml ./
+COPY package*.json ./
 
-# 将本地文件复制到构建上下文
+RUN pnpm install
 COPY . .
+RUN pnpm build
+RUN pnpm prune --production
 
-RUN pnpm install --no-frozen-lockfile
-CMD ["pnpm", "serve:bot"]
+FROM node:16-alpine
+
+WORKDIR /app
+
+COPY --from=BUILD_IMAGE /app/package.json .
+COPY --from=BUILD_IMAGE /app/dist ./dist
+COPY --from=BUILD_IMAGE /app/node_modules ./node_modules
+
+CMD ["node", "dist/server/robot-app.js"]
