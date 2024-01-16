@@ -27,11 +27,6 @@ class Robot {
     this.listen();
   }
 
-  private async logout() {
-    await this.bot.logout()
-    this.logger.info('Bot logout')
-  }
-
   private async listen() {
     this.bot.on('scan', this.onScan.bind(this));
     this.bot.on('login', this.onLogin.bind(this));

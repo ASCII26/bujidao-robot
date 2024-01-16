@@ -1,31 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "module": "CommonJS",
-    "lib": ["es2017", "dom"],
-    "outDir": "dist",
-    "rootDir": ".",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "noUnusedParameters": true,
-    "noUnusedLocals": true,
-    "noImplicitReturns": true,
-    "forceConsistentCasingInFileNames": true,
-    "experimentalDecorators": true,
-    "noImplicitAny": false,
-    "emitDecoratorMetadata": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
     "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/model",
-    "src/server",
-    "src/robot-app.ts",
-  ]
+  "include": ["vite.config.ts"]
 }
