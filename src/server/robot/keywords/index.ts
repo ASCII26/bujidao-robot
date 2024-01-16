@@ -4,6 +4,7 @@ import winston from "winston";
 import { weatherWordsHandle } from "./weather";
 import { inviteToRoom, roomWordsHandle } from "./room";
 import { WechatyInterface } from "@juzi/wechaty/impls";
+import { replaceSpace, say } from "@/server/utils/function";
 
 export interface IWordsContextBase {
   user: Contact;
@@ -29,8 +30,18 @@ export function keyWordsHandle(ctx: IWordsContextOnPrivate): void;
 export function keyWordsHandle(ctx: IWordsContextOnFriendship): void;
 export function keyWordsHandle(ctx: IWordsContextWithRoom): void;
 export function keyWordsHandle (ctx: IWordsContext) {
-  const text = getText(ctx);
-  const words = text.split(' ');
+  const text = replaceSpace(getText(ctx));
+  let words: string[] = [];
+  if ('room' in ctx) {
+    // 群聊需要过滤掉@用户名，保留住command和extra
+    const match = text.match(/@(.+?)\s+(.+?)\s+(.+)/)
+    if (match) {
+      words = match.slice(2);
+    }
+  } else {
+    words = text.split(' ');
+  }
+
   if (words.length > 0 && commands.includes(words[0])) {
     commandMatchHandle(words, text, ctx);
   } else {
@@ -59,6 +70,7 @@ const commandMatchHandle = (words: string[], text: string, ctx: IWordsContext) =
         ...ctx,
         command,
         city: extra,
+        text,
       });
       break;
     case commandsType.exchangeRate:
@@ -80,6 +92,5 @@ const fullMatchHandle = (ctx: IWordsContext, text: string) => {
   /**
    * TODO: 匹配不到命令关键词的逻辑
    */
-  const say = 'msg' in ctx ? ctx.msg.say : ctx.user.say;
-  say(`请问有什么事吗？你刚刚对我说：(${text})`);
+  say(ctx, `请问有什么事吗？你刚刚对我说：(${text})`);
 }

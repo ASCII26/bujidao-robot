@@ -1,5 +1,6 @@
 import { ILiveWeather, IForecast } from "@/model/weather";
 import { weatherEmoji, weatherWordsMap } from "./weather-words";
+import { IWordsContext } from "../robot/keywords";
 
 const getEmojiOfWeather = (weather: string) => {
   if (weatherEmoji[weather]) {
@@ -36,3 +37,14 @@ export const getPrettyMsgOfWeather = (data: ILiveWeather | IForecast, isForcast:
   }
   return getPrettyMsgOfLiveWeather(data as ILiveWeather);
 }
+
+export const say = async (ctx: IWordsContext, text: string) => {
+  if ('msg' in ctx) {
+    await ctx.msg.say(text);
+  } else {
+    await ctx.user.say(text);
+  }
+}
+
+// 统一半角/全角空格
+export const replaceSpace = (str: string) => str.replace(/\s/g, ' ');

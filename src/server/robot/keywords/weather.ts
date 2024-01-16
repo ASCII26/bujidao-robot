@@ -1,15 +1,12 @@
 import { weather } from "@/server/api/weather";
-import { getPrettyMsgOfWeather } from "@/server/utils/function";
+import { getPrettyMsgOfWeather, say } from "@/server/utils/function";
 import { IWordsContext } from ".";
 
-export const weatherWordsHandle = async ({
-  command,
-  city,
-  user,
-}: {
+export const weatherWordsHandle = async (ctx: {
   command: string;
   city: string;
 } & IWordsContext) => {
+  const { user, city, command } = ctx;
   if (!city) {
     await user.say(`你想问哪里的天气呢？
 回复“天气 某地”，查询实时天气状况
@@ -21,8 +18,8 @@ export const weatherWordsHandle = async ({
   const extension = isForcast ? 'all' : 'base';
   const resp = await weather.get(city, extension);
   if (resp.data) {
-    await user.say(getPrettyMsgOfWeather(resp.data, isForcast));
+    await say(ctx, getPrettyMsgOfWeather(resp.data, isForcast));
   } else {
-    await user.say(resp.message);
+    await say(ctx, resp.message);
   }
 }
