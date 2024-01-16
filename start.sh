@@ -1,0 +1,1 @@
+docker run --name=bujidao-robot --env-file .env -d bujidao-robot:$1

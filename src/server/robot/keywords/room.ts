@@ -57,6 +57,7 @@ export const inviteToRoom = async ({
     : undefined;
 
   if (!room) {
+    await user.say('没找到合适的群，请联系添加沐洒（微信号：ASCII26）进行邀请。')
     return;
   }
   

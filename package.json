@@ -11,7 +11,7 @@
     "copy:env": "copyfiles -f .env dist",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "serve:bot": "tsx --tsconfig tsconfig.node.json src/robot-app.ts",
+    "serve:bot": "tsx --tsconfig tsconfig.json src/robot-app.ts",
     "dev:bot": "cross-env nodemon --config nodemon.json"
   },
   "dependencies": {
@@ -44,6 +44,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "nodemon": "^3.0.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.2.2",
     "vite": "^5.0.8",
     "vite-plugin-node": "^3.1.0"

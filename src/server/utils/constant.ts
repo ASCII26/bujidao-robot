@@ -11,7 +11,7 @@ export const roomKeywordsMap: Record<string, string[]> = {
 };
 
 export const roomNamesMap: Record<string, string> = {
-  [ROOM_NAMES.BUJIDAO]: '',
+  [ROOM_NAMES.BUJIDAO]: '沐洒布吉岛',
   [ROOM_NAMES.ROBOT]: '小岛管家项目交流群',
 }
 

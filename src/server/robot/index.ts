@@ -13,6 +13,7 @@ import winston from 'winston';
 import { keyWordsHandle } from './keywords';
 import { HELLO, ROOM_IN_MESSAGE } from '../utils/template-msg';
 
+const systemMsgRegex = /你已添加了(.+?)，现在可以开始聊天了|我已经添加了你，现在我们可以开始聊天了/;
 class Robot {
   private bot: WechatyInterface;
   constructor(token: string, private logger: winston.Logger) {
@@ -41,10 +42,7 @@ class Robot {
   }
 
   private async onFriendship(friendship: Friendship) {
-    if (friendship.type() === FriendshipType.Receive) {
-      await friendship.accept();
-      // 需要等待一会儿，等待系统处理好友请求
-      await new Promise(r => setTimeout(r, 1000))
+    if (friendship.type() === FriendshipType.Confirm) {
       const helloMsg = friendship.hello();
       const user = friendship.contact();
       if (helloMsg) {
@@ -113,6 +111,11 @@ class Robot {
     const talker = msg.talker();
     const room = msg.room();
     const userName = talker.name();
+
+    // 系统消息不进一步处理
+    if (systemMsgRegex.test(text)) {
+      return;
+    }
 
     // 群聊消息处理
     if (room) {
