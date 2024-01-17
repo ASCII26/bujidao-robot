@@ -1,5 +1,6 @@
 // 管理员ID列表
 export const ADMINS = ['7881299792907647'];
+export const AI_WHITE_LIST = ['7881299792907647'];
 
 export enum ROOM_NAMES {
   BUJIDAO,

@@ -5,6 +5,8 @@ import { weatherWordsHandle } from "./weather";
 import { inviteToRoom, roomWordsHandle } from "./room";
 import { WechatyInterface } from "@juzi/wechaty/impls";
 import { replaceSpace, say } from "@/server/utils/function";
+import { AI_WHITE_LIST } from "@/server/utils/constant";
+import { AI } from "@/server/openai";
 
 export interface IWordsContextBase {
   user: Contact;
@@ -88,9 +90,17 @@ const commandMatchHandle = (words: string[], text: string, ctx: IWordsContext) =
 }
 
 // 全匹配逻辑
-const fullMatchHandle = (ctx: IWordsContext, text: string) => {
+const fullMatchHandle = async (ctx: IWordsContext, text: string) => {
   /**
    * TODO: 匹配不到命令关键词的逻辑
    */
-  say(ctx, `请问有什么事吗？你刚刚对我说：(${text})`);
+  if (AI_WHITE_LIST.includes(ctx.user.id)) {
+    await say(ctx, 'AI分析中，请稍后（具体时间取决于问题复杂程度）...');
+    // 等待一会儿
+    await new Promise(r => setTimeout(r, 1000))
+    const resp = await AI.chat(text);
+    await say(ctx, resp || '（AI响应异常）');
+  } else {
+    await say(ctx, `你不在AI白名单内，无法使用AI回复，尝试进行关键词回复：\n「${text}」匹配不到关键词，你可以试试对我说“天气 深圳”`);
+  }
 }

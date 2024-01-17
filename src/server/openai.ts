@@ -1,16 +1,26 @@
 import OpenAI from "openai";
+import { ERROR_MESSAGES } from "./utils/error-code";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_KEY,
-});
+class AIBot {
+  private bot: OpenAI;
+  constructor(key?: string) {
+    this.bot = new OpenAI({
+      apiKey: key,
+    });
+  }
 
-async function main() {
-  const completion = await openai.chat.completions.create({
-    messages: [{ role: "system", content: "who are you?" }],
-    model: "gpt-3.5-turbo",
-  });
-
-  console.log(completion.choices[0]);
+  public async chat(content: string, model = "gpt-3.5-turbo") {
+    try {
+      const completion = await this.bot.chat.completions.create({
+        messages: [{ role: "system", content }],
+        model,
+      });
+  
+      return completion.choices[0].message.content;
+    } catch(error: any) {
+      return ERROR_MESSAGES[error.error.code] ?? 'AI服务调用异常';
+    }
+  }
 }
 
-main();
+export const AI = new AIBot(process.env.AI_KEY);
