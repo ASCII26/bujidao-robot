@@ -33,3 +33,9 @@ tips: 关键词之间用空格隔开
 - [ ] 接入DB
 - [ ] Robot管理页面
 - [ ] 其它
+
+---
+
+欢迎扫码体验：
+
+![image](https://github.com/ASCII26/bujidao-robot/assets/5102623/cab6d1db-9391-44c7-b754-fc44cd303bd0)
